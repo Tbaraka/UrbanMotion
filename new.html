@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Map with Route Search</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <style>
+    /* Ensure the map fills the entire viewport */
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+    }
+    /* Style for the routing control panel */
+    .leaflet-routing-container {
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 5px;
+      padding: 10px;
+    }
+    /* Customize the color scheme */
+    .leaflet-routing-alt {
+      background-color: #FFA500; /* Orange */
+    }
+    .leaflet-routing-alt h2 {
+      color: #0000FF; /* Blue */
+    }
+    .leaflet-routing-alt table {
+      color: #FFFFFF; /* White */
+    }
+    /* Style for controls */
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <input id="start" type="text" placeholder="Enter starting location" required>
+    <input id="end" type="text" placeholder="Enter destination" required>
+    <button onclick="calculateRoute()">Get Route</button>
+  </div>
+  <div id="map"></div>
+</body>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script>
+  var map;
+  var routingControl;
+  var geocoder;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Initialize the map and set its view to Nairobi, Kenya
+    map = L.map('map').setView([-1.286389, 36.817223], 13);
+
+    // Add OpenStreetMap tiles with attribution
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Initialize routing control with red route color
+    routingControl = L.Routing.control({
+      waypoints: [],
+      routeWhileDragging: true,
+      lineOptions: {
+        styles: [{ color: 'red', opacity: 1, weight: 5 }]
+      }
+    }).addTo(map);
+
+    // Initialize geocoder
+    geocoder = L.Control.Geocoder.nominatim();
+  });
+
+  function calculateRoute() {
+    var start = document.getElementById('start').value;
+    var end = document.getElementById('end').value;
+
+    if (start && end) {
+      geocoder.geocode(start, function(results) {
+        if (results.length > 0) {
+          var startLatLng = results[0].center;
+          geocoder.geocode(end, function(results) {
+            if (results.length > 0) {
+              var endLatLng = results[0].center;
+              // Set waypoints
+              routingControl.setWaypoints([
+                L.latLng(startLatLng.lat, startLatLng.lng),
+                L.latLng(endLatLng.lat, endLatLng.lng)
+              ]);
+            } else {
+              alert('Could not find the destination location. Please check the input.');
+            }
+          });
+        } else {
+          alert('Could not find the starting location. Please check the input.');
+        }
+      });
+    } else {
+      alert('Please enter both starting and destination locations.');
+    }
+  }
+</script>
+</html>
